@@ -1,33 +1,45 @@
+; SICP 1.1 - The Elements of Programming
 #!/usr/bin/guile -s
 !#
-(define (square x) (* x x))
+(define (sqrt x)
+	(define (sqrt-iter guess)
+		(if (good-enough? guess (improve guess))
+			guess
+			(sqrt-iter (improve guess))))
 
-(define (sum-of-squares x y) (+ (square x) (square y)))
+	; when the difference between guesses is small enough
+	(define (good-enough? guess next-guess)
+		(< (abs (- guess next-guess)) 0.001))
 
-; returns the greater of two
-(define (max x y)
-	(if (>= x y)
-			x
-			y))
+	; Newton's method of successive approximations
+	(define (improve guess)
+		(average guess (/ x guess)))
 
-; returns the greater of three
-(define (max-of-three x y z)
-	(cond ((and (> x y) (> x z)) x)
-				((> y z) y)
-				(else z)))
+	(sqrt-iter 1.0))
 
-(define (sum-of-max-squares x y z)
-	(cond ((= x (max-of-three x y z)) (sum-of-squares x (max y z)))
-				((= y (max-of-three x y z)) (sum-of-squares y (max x z)))
-				(else (sum-of-squares z (max x y)))))
+(define (cube-root x)
+	; numerical approximation
+	(define (cube-root-iter guess)
+		(if (good-enough? guess (improve guess))
+			guess
+			(cube-root-iter (improve guess))))
+	
+	; when the difference between gueses is small enough
+	(define (good-enough? guess next-guess)
+		(< (abs (- guess next-guess)) 0.001))
+	
+	; Newton's equation for an improved guess to the cubed root of x
+	(define (improve guess)
+		(/ (+ (/ x (square guess)) (* guess 2)) 3))
+
+	(cube-root-iter 1.0))
+
+(define (average x y)
+	(/ (+ x y) 2))
 
 (define (abs x)
-  (if (< x 0)
-      (- x)
-      x))
+	(if (< x 0)
+		(- x)
+		x))
 
-(define (>= x y)
-  (or (> x y) (= x y)))
-
-(define (<= x y)
-  (not (> x y)))
+(define (square x) (* x x))

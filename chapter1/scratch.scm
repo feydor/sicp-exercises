@@ -12,6 +12,6 @@
   (not (> x y)))
 
 (define (fact x)
-	(if (= x 1)
-		1
-		(* x (fact (- x 1)))))
+  (if (= x 1)
+      1
+      (* x (fact (- x 1)))))

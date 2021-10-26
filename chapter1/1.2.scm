@@ -130,23 +130,66 @@
 (define (prime? n)
   (= n (smallest-divisor n)))
 (define (smallest-divisor n)
-  (find-divisor n 2))
-(define (find-divisor n test-divisor)
+  (find-divisor-improved n 2))
+(define (find-divisor-improved n test-divisor)
   (cond ((> (square test-divisor) n) n)
         ((divides? test-divisor n) test-divisor)
-        (else (find-divisor n (+ test-divisor 1)))))
+        (else (find-divisor-improved n (next test-divisor)))))
+
+; 1.23 - improve find-divisor, halve the number of test steps
+; when a number is divisible by 2, skip checking larger even numbers.
+; speedup is not 2X b/c of the added function call, equality check,
+; and if statement
+(define (next n)
+  (if (= n 2)
+      3
+      (+ n 2)))
+
+; 1.24 fermat prime test
+; steps = O(logn)
+; if n is prim and a < n, then a^n is congruent to a mod n
+; congruent = same remainder when divided by n, a mod n
+; pick a random number a < n, compute the remainder of a^n,
+; if the remainder =/= a, then n is not prime
+(define (fast-prime? n times)
+  (cond ((= times 0) #t)
+        ((fermat-test n) (fast-prime? n (- times 1)))
+        (else #f)))
+(define (fermat-test n)
+  (define (try-it a)
+    (= (expmod a n n) a))
+  (try-it (+ 1 (random (- n 1)))))
+(define (expmod base exp m)
+  (cond ((= exp 0) 1)
+        ((even? exp)
+         (remainder (square (expmod base (/ exp 2) m))
+                    m))
+        (else
+          (remainder (* base (expmod base (- exp 1) m))
+                     m))))
 
 (define (timed-prime-test n)
-  (newline)
   (display n)
   (start-prime-test n (runtime)))
 (define (start-prime-test n start-time)
   (if (prime? n)
-      (report-prime (- (runtime) start-time))))
+      (report-prime (- (runtime) start-time))
+      (newline)))
 (define (report-prime elapsed-time)
   (display " *** ")
   (display elapsed-time)
   (newline))
+
+; 1.22 - time the primality of consequetive odd integers 
+(define (search-for-primes n lower-limit)
+  (search-iter lower-limit 0 n))
+(define (search-iter curr count max-primes)
+  (cond ((= count max-primes) (newline))
+        ((odd? curr)
+         (if (timed-prime-test curr)
+             (search-iter (+ curr 1) (+ count 1) max-primes)
+             (search-iter (+ curr 1) count max-primes)))
+        (else (search-iter (+ curr 1) count max-primes))))
 
 (define (square n) (* n n))
 (define (inc n) (+ n 1))

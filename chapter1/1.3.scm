@@ -24,11 +24,10 @@
 
 ; term = 1 / (x * 2x), x -> x+ 4
 (define (pi-sum a b)
-  (define (pi-term x)
-    (/ 1.0 (* x (+ x 2))))
-  (define (pi-next x)
-    (+ x 4))
-  (sum pi-term a pi-next b))
+  (sum (lambda (x) (/ 1.0 (* x (+ x 2))))
+       a
+       (lambda (x) (+ x 4))
+       b))
 
 (define (pi-aprox)
   (* 8 (pi-sum 1 1000)))
@@ -37,8 +36,10 @@
 ; (integral f) =~ [f(a+dx/2) + f((a+dx)+dx/2) + f((a+2dx)+dx/2)+...]*dx
 ; ex: (integral cube 0 1 0.001) = 0.249999875
 (define (integral f a b dx)
-  (define (add-dx x) (+ x dx))
-  (* (sum f (+ a (/ dx 2.0)) add-dx b)
+  (* (sum f
+          (+ a (/ dx 2.0))
+          (lambda (x) (+ x dx))
+          b)
      dx))
 
 ; 1.29 - Simpson's rule
@@ -145,12 +146,74 @@
     (= (gcd i n) 1))
   (filtered-accumulate relative-prime? * 1 identity 1 inc n))
 
+; f(x,y) = x(a)^2 + y(b) + (b)(a)
+; where a = 1+xy, b = 1-y are local variables defined using let
+(define (f x y)
+  (let ((a (+ 1 (* x y)))
+        (b (- 1 y)))
+    (+ (* x (square a))
+       (* y b)
+       (* b a))))
 
+; half-interval method for finding roots of an equation f(x) = 0
+(define (half-interval-method f a b)
+  (let ((a-value (f a))
+        (b-value (f b)))
+    ; test for negative and positive inputs to search
+    (cond ((and (negative? a-value) (positive? b-value))
+           (search f a b))
+          ((and (negative? b-value) (positive? a-value))
+           (search f b a))
+          (else
+            (error "Values are not of opposite sign" a b)))))
+
+(define (search f neg-point pos-point)
+  (let ((midpoint (average neg-point pos-point)))
+     (if (close-enough? neg-point pos-point)
+       midpoint
+       (let ((test-value (f midpoint)))
+          (cond ((positive? test-value)
+                 (search f neg-point midpoint))
+                ((negative? test-value)
+                 (search f midpoint pos-point))
+                (else midpoint))))))
+
+(define (close-enough? x y)
+  (< (abs (- x y)) 0.001))
+
+(define (pi-hf) (half-interval-method sin 2.0 4.0))
+
+; finding fixed points of a function f
+(define tolerance 0.00001)
+(define (fixed-point f first-guess)
+  (define (close-enough? v1 v2)
+    (< (abs (- v1 v2)) tolerance))
+  (define (try guess)
+    (let ((next (f guess)))
+      (if (close-enough? guess next)
+          next
+          (try next))))
+  (try first-guess))
+
+; sqrt of x
+; y^2 = x, 2y = (x/y + y), y = (1/2)(y + x/y)
+(define (sqrt x)
+  (fixed-point (lambda (y) (average y (/ x y)))
+               1.0))
+
+; 1.35 golden ratio as fixed-point of x -> 1 + 1/x
+(define (phi)
+  (fixed-point (lambda (x) (+ (/ 1 x) 1)) 1.0))
+
+; helper procedures
 (define (identity n) n)
 (define (square n) (* n n))
 (define (cube n) (* n n n))
 (define (inc n) (+ n 1))
 (define (divides? a b) (= (remainder b a) 0))
+(define (positive? n) (> n 0))
+(define (negative? n) (< n 0))
+(define (average x y) (/ (+ x y) 2.0))
 
 ; prime? - testing for divisiblity via successive integers starting with 2
 (define (prime? n)

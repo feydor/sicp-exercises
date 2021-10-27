@@ -277,6 +277,19 @@
              (lambda (i) (- (* 2.0 i) 1))           ; i -> (multiples of 2) - 1
              100))
 
+(define (average-damp f)
+  (lambda (x) (average x (f x))))
+
+; sqrt with explicit average-damp
+; fixed-point of y->x/y
+(define (sqrt2 x)
+  (fixed-point (average-damp (lambda (y) (/ x y)))
+               1.0))
+; fixed-point of y-> x/y^2
+(define (cube-root x)
+  (fixed-point (average-damp (lambda (y) (/ x (square y))))
+               1.0))
+
 ; helper procedures
 (define (identity n) n)
 (define (square n) (* n n))

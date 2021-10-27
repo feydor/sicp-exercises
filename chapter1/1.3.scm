@@ -107,9 +107,10 @@
 ; 1.32 generalized sum and product into a combiner
 (define (accumulate combiner null-value term a next b)
   (if (> a b)
-    null-value
-    (combiner (term a)
-              (accumulate combiner null-value term (next a) next b))))
+      null-value
+      (combiner (term a)
+                (accumulate combiner null-value
+                            term (next a) next b))))
 
 ; iterative version of above
 (define (accumulate-iter combiner null-value term a next b)
@@ -125,7 +126,7 @@
 (define (acc-prod term a next b)
   (accumulate-iter * 1 term a next b))
 
-; 1.33 generalized accumulate with an abstract condition (filter)
+; 1.33 generalized accumulate with a filter condition
 (define (filtered-accumulate predicate? combiner null-value term a next b)
   (if (> a b)
     null-value
@@ -189,6 +190,7 @@
   (define (close-enough? v1 v2)
     (< (abs (- v1 v2)) tolerance))
   (define (try guess)
+    (display guess) (newline)
     (let ((next (f guess)))
       (if (close-enough? guess next)
           next
@@ -205,6 +207,76 @@
 (define (phi)
   (fixed-point (lambda (x) (+ (/ 1 x) 1)) 1.0))
 
+; 1.36 solution to x^x = 1000
+; 10 steps with damping, 35 steps without it
+; where damping is (average x f(x)) instead of just f(x)
+(define (xx)
+  ; (fixed-point (lambda (x) (/ (log 1000) (log x))) 2))
+  (fixed-point (lambda (x) (average x (/ (log 1000) (log x)))) 2))
+
+; 1.37 continued fractions
+; params:
+; n - gives numerator of k,
+; d - gives denominator of k,
+; k - k-terms of a finite continue fraction to compute
+(define (cont-frac n d k)
+  ; linear recursive process
+  (define (recur i)
+    (if (= i k)
+        i
+        (/ (n i)
+           (+ (d i)
+              (recur (+ i 1))))))
+ 
+  ; iterative process
+  ; a (result) -> ni / (di + a)
+  (define (iter result i)
+    (if (= i k)
+        result
+        (iter (/ (n i)
+                 (+ result (d i)))
+              (+ i 1))))
+
+  ;(recur 0)
+  (iter 0 0))
+
+; 1/phi ~= 0.61803398875
+(define (inv-phi)
+  (cont-frac (lambda (i) 1.0)
+             (lambda (i) 1.0)
+             100))
+
+; 1.38 approximation of e using Euler's expansion for e - 2
+; e ~= 2.71828
+(define (e)
+  (+ 2
+     (cont-frac (lambda (i) 1.0)
+                euler-series
+                100)))
+
+; 1, 2, 1, 1, 4, 1, 1, 6, 1, 1, 8, ...
+(define (euler-series i)
+  (if (= (modulo i 3) 2)
+    (* 2 (/ (+ i 1) 3)) ; twice the number of the triplet in the series
+    1))
+
+; displays n elements of the series f
+(define (display-series f n)
+  (define (recur i)
+    (display (f i)) (display ", ")
+    (if (= i n)
+        (newline)
+        (recur (inc i))))
+  (recur 1))
+
+; 1.39 aproximation for tangent
+; k - steps to compute
+; tan(45) = 1
+(define (tan-cf x k)
+  (cont-frac (lambda (i) (if (= i 1) x (* x x -1))) ; -x^2
+             (lambda (i) (- (* 2.0 i) 1))           ; i -> (multiples of 2) - 1
+             100))
+
 ; helper procedures
 (define (identity n) n)
 (define (square n) (* n n))
@@ -214,6 +286,22 @@
 (define (positive? n) (> n 0))
 (define (negative? n) (< n 0))
 (define (average x y) (/ (+ x y) 2.0))
+
+; iterative exponentiation b^n by successive multiplication
+(define (pow base exp)
+  (define (iter res base exp)
+    (cond ((= exp 0) res)
+          ((even? exp) (iter res
+                             (square base)
+                             (/ exp 2)))
+          (else (iter (* res base)
+                      base
+                      (- exp 1)))))
+
+  (if (= exp 1)
+      base
+      (iter 1 base exp)))
+
 
 ; prime? - testing for divisiblity via successive integers starting with 2
 (define (prime? n)

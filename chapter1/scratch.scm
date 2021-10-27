@@ -15,3 +15,13 @@
   (if (= x 1)
       1
       (* x (fact (- x 1)))))
+
+; iterative fibonacci; fib(n)
+; a -> a+b, b -> a for count < n
+(define (fib n)
+  (define (iter a b count)
+    (if (= count n)
+      a
+      (iter (+ a b) a (+ count 1))))
+  (iter 0 1 0))
+

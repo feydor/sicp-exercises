@@ -1,6 +1,5 @@
-# SICP Solutions, JS/Scheme
-My solutions to Structure and Interpretation of Computer Programs, JavaScript Adaptation. 
+# SICP Solutions
+My solutions to Structure and Interpretation of Computer Programs, following the MIT course 6.001.
 
-Text: https://source-academy.github.io/sicp/index.html  
-      https://mitpress.mit.edu/sites/default/files/sicp/full-text/book/book.html  
-Tested on: https://source-academy.github.io/playground
+Text: https://mitpress.mit.edu/sites/default/files/sicp/full-text/book/book.html  
+Course site: https://ocw.mit.edu/courses/electrical-engineering-and-computer-science/6-001-structure-and-interpretation-of-computer-programs-spring-2005/index.htm

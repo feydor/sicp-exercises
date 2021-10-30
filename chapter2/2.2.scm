@@ -1,6 +1,7 @@
 ; SICP 2.2 - Heirarchical data and the closure property
-#!/usr/bin/guile -s
-!#
+;#!/usr/bin/guile -s
+;!#
+#lang racket
 (define nil '())
 
 ; list operations
@@ -76,11 +77,11 @@
       (odd? y)))
 
 
-(define (scale-list items factor)
-  (if (null? items)
-      '()
-      (cons (* (car items) factor)
-            (scale-list (cdr items) factor))))
+;(define (scale-list items factor)
+;  (if (null? items)
+;      '()
+;      (cons (* (car items) factor)
+;            (scale-list (cdr items) factor))))
 
 ; map proc over list
 (define (map proc items)
@@ -98,16 +99,89 @@
       nil
       (cons (square (car items))
             (square-list (cdr items)))))
-(define (square-list items)
-  (map square items))
+;(define (square-list items)
+;  (map square items))
 
-; Ex 2.22
+; Ex 2.23
 (define (for-each proc items)
   (define (iter items evaluate)
     (if (null? items)
         #t
         (iter (cdr items) (proc (car items)))))
   (iter items #t))
+
+; trees as lists of lists
+(define t (cons (list 1 2) (list 3 4)))
+
+(define (count-leaves x)
+  (cond ((null? x) 0)
+        ((not (pair? x)) 1)
+        (else (+ (count-leaves (car x))
+                 (count-leaves (cdr x))))))
+
+(define (leaf? x) (not (pair? x)))
+
+; Ex 2.24
+; (list 1 (list 2 (list 3 4)))
+; '(1 (2 (3 4)))
+
+; Ex 2.25 - get 7 with car/cdr
+(define list1 (list 1 3 (list 5 7) 9)) ; (car (cdr (car (cdr (cdr list1)))))
+(define list2 (list (list 7)))         ; (car (car list2))
+; (car (cdr (car (cdr (car (cdr (car (cdr (car (cdr (car(cdr list3))))))))))))
+(define list3 (list 1 (list 2 (list 3 (list 4 (list 5 (list 6 7)))))))
+
+; Ex 2.27
+; if head is pair, cons deep-reverse of that pair onto result
+; else cons the head (a leaf node) onto result
+(define (deep-reverse items)
+    (define (iter x result)
+      (cond ((null? x) result)
+            ((pair? (car x))
+             (iter (cdr x) (cons (deep-reverse (car x)) result)))
+            (else (iter (cdr x) (cons (car x) result)))))
+    (iter items nil))
+
+; Ex 2.28
+; (fringe (list (list 1 2) (list 3 4))) => (1 2 3 4)
+; if head is pair, append left and right branches
+; else cons node onto list and loop
+(define (fringe x)
+  (define (tree-head? x) (pair? (car x)))
+  (cond ((null? x) nil)
+        ((tree-head? x) (append (fringe (car x))
+                                (fringe (cdr x))))
+        (else (cons (car x) (fringe (cdr x))))))
+
+; Ex 2.29
+; binary mobile, a left and right branch
+; each branch has either a weight or a binary mobile
+(define (make-mobile left right)
+  (list left right))
+
+; branch, a length (number) and a structure (number or mobile)
+(define (make-branch length structure)
+  (list length structure))
+
+(define (left-branch mobile) (car mobile))
+(define (right-branch mobile) (car (cdr mobile)))
+(define (branch-length b) (car b))
+(define (branch-structure b) (car (cdr b)))
+
+(define (total-weight mobile)
+  (define (branch-weight branch)
+  (let ((structure (branch-structure branch)))
+    (if (pair? structure)
+        (total-weight structure)
+        structure)))
+  (+ (branch-weight (left-branch mobile))
+     (branch-weight (right-branch mobile))))
+
+(define mb (make-mobile (make-branch 1 5) (make-branch 2 10)))
+(define mb2
+  (make-mobile (make-branch 10 1)
+               (make-branch 2 (make-mobile (make-branch 4 1)
+                                           (make-branch 1 4)))))
 
 
 ; helper procedures

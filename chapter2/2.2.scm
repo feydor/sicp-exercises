@@ -214,61 +214,13 @@
              (scale-tree sub-tree factor)
              (* sub-tree factor)))
        tree))
-
-; Ex 2.30
-; square tree using cons, car, cdr
-(define (square-tree tree)
-  (cond ((null? tree) nil)
-        ((not (pair? tree)) (square tree))
-        (else (cons (square-tree (car tree))
-                    (square-tree (cdr tree))))))
-
-; square tree using map
-(define (square-tree-map tree)
-  (map (lambda (sub-tree)
-         (if (pair? sub-tree)
-             (square-tree-map sub-tree)
-             (square sub-tree)))
-       tree))
-
-; Ex 2.31
-; abstract square-tree-map into tree-map
-; map f onto tree
-(define (tree-map f tree)
-  (map (lambda (sub-tree)
-         (if (pair? sub-tree)
-             (tree-map f sub-tree)
-             (f sub-tree)))
-       tree))
-
-(define (square-tree2 tree) (tree-map square tree))
-
-; Ex 2.32
-; return the set of all subsets of s
-; where s is a list of distinct numbers
-; the set of all subsets is:
-; 1. the set of all subsets excluding the first number and
-; 2. '', with the first number reinserted into each subset
-(define set1 (list 1 2 3))
-(define (subsets s)
-  (if (null? s)
-      (list nil)
-      ; this part excludes the first number
-      (let ((rest (subsets (cdr s))))
-        ; this part reinserts the first number into each subset s
-        (append rest (map (lambda (x) (cons (car s) x)) rest)))))
-
-
-
-
-
-
-
-
-
-
-
-
+  
 
 ; helper procedures
 (define (square n) (* n n))
+(define (fib n)
+  (define (iter a b n)
+    (if (= n 0)
+        a
+        (iter (+ a b) a (- n 1))))
+  (iter 0 1 n))

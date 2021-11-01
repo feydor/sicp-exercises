@@ -164,24 +164,110 @@
   (list length structure))
 
 (define (left-branch mobile) (car mobile))
-(define (right-branch mobile) (car (cdr mobile)))
+(define (right-branch mobile) (cadr mobile))
 (define (branch-length b) (car b))
-(define (branch-structure b) (car (cdr b)))
+(define (branch-structure b) (cadr b))
 
-(define (total-weight mobile)
-  (define (branch-weight branch)
-  (let ((structure (branch-structure branch)))
-    (if (pair? structure)
-        (total-weight structure)
-        structure)))
-  (+ (branch-weight (left-branch mobile))
-     (branch-weight (right-branch mobile))))
+(define mb1 (make-mobile (make-branch 1 5) (make-branch 2 10)))
 
-(define mb (make-mobile (make-branch 1 5) (make-branch 2 10)))
+; balanced mobile with total weight of 10 on both branches
 (define mb2
   (make-mobile (make-branch 10 1)
                (make-branch 2 (make-mobile (make-branch 4 1)
                                            (make-branch 1 4)))))
+
+(define (branch-weight branch)
+  (let ((structure (branch-structure branch)))
+    (if (pair? structure)
+        (total-weight structure)
+        structure)))
+
+; total weight of the entire mobile
+(define (total-weight mobile)  
+  (+ (branch-weight (left-branch mobile))
+     (branch-weight (right-branch mobile))))
+
+(define (branch-torque branch)
+   (* (branch-length branch)
+      (branch-weight branch)))
+
+(define (branch-balanced? branch)
+  (let ((structure (branch-structure branch)))
+  (if (pair? structure)
+      (balanced? structure)
+      #t)))
+
+; if the torque applied to the left is equal to that applied to the right
+; and both branches are balanced
+(define (balanced? mobile)
+  (and (= (branch-torque (left-branch mobile))
+          (branch-torque (right-branch mobile)))
+       (branch-balanced? (left-branch mobile))
+       (branch-balanced? (right-branch mobile))))
+
+; mapping over trees
+(define tree1 (list 1 2 3 4 5 (list 6 7 (list 8 9))))
+
+(define (scale-tree tree factor)
+  (map (lambda (sub-tree)
+         (if (pair? sub-tree)
+             (scale-tree sub-tree factor)
+             (* sub-tree factor)))
+       tree))
+
+; Ex 2.30
+; square tree using cons, car, cdr
+(define (square-tree tree)
+  (cond ((null? tree) nil)
+        ((not (pair? tree)) (square tree))
+        (else (cons (square-tree (car tree))
+                    (square-tree (cdr tree))))))
+
+; square tree using map
+(define (square-tree-map tree)
+  (map (lambda (sub-tree)
+         (if (pair? sub-tree)
+             (square-tree-map sub-tree)
+             (square sub-tree)))
+       tree))
+
+; Ex 2.31
+; abstract square-tree-map into tree-map
+; map f onto tree
+(define (tree-map f tree)
+  (map (lambda (sub-tree)
+         (if (pair? sub-tree)
+             (tree-map f sub-tree)
+             (f sub-tree)))
+       tree))
+
+(define (square-tree2 tree) (tree-map square tree))
+
+; Ex 2.32
+; return the set of all subsets of s
+; where s is a list of distinct numbers
+; the set of all subsets is:
+; 1. the set of all subsets excluding the first number and
+; 2. '', with the first number reinserted into each subset
+(define set1 (list 1 2 3))
+(define (subsets s)
+  (if (null? s)
+      (list nil)
+      ; this part excludes the first number
+      (let ((rest (subsets (cdr s))))
+        ; this part reinserts the first number into each subset s
+        (append rest (map (lambda (x) (cons (car s) x)) rest)))))
+
+
+
+
+
+
+
+
+
+
+
 
 
 ; helper procedures

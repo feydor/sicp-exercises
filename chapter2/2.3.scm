@@ -130,10 +130,82 @@
 
 ; Ex 2.36
 ; accumulates a sequence of sequences, all of same size
-;(define (accumulate-n op init seqs)
+(define s (list (list 1 2 3) (list 4 5 6) (list 7 8 9) (list 10 11 12)))
+(define (accumulate-n op init seqs)
+  (if (null? (car seqs))
+      nil
+      (cons (accumulate op init (map car seqs)) ; first of every sequence
+            (accumulate-n op init (map cdr seqs)))))
 
+; Ex 2.37
+; matrix => list of vector (rows)
+; vector => list of numbers
+; so ((1 2 3 4) (4 5 6 6) (6 7 8 9)) is a 4x4 matrix
+(define m (list (list 1 2 3) (list 4 5 6) (list 7 8 9)))
+(define v (list 1 2 3))
 
+; the sum of ui*vi for each dimension i
+; u * v = ux*vx + uy*vy + uz*vz
+(define (dot-product u v)
+  (accumulate + 0 (map * u v))) ; multiply together each part and acc
 
+; the dot-product of the vector v with each of the rows of matrix m
+; (matrix-*-vector m v) => (14 32 50)
+(define (matrix-*-vector m v)
+  (map (lambda (m-row) (dot-product m-row v))
+       m))
+
+; matrix m1 * each row of m2 (aka matrix-*-vector m1 m2-row)
+; (matrix-*-matrix m m) => ((14 32 50) (32 77 122) (50 122 194))
+(define (matrix-*-matrix m1 m2)
+  (map (lambda (m2-row) (matrix-*-vector m1 m2-row))
+       m2))
+
+; swap rows into columns
+(define (transpose mat)
+  (accumulate-n cons nil mat))
+
+; prints the matrix with rows stacked vertically
+(define (print-matrix m)
+  (for-each (lambda (m-row) (display m-row) (newline))
+            m))
+
+; Ex 2.38
+; accumulate is also called fold-right
+(define fold-right accumulate)
+(define (fold-left op initial sequence)
+  (define (iter result rest)
+    (if (null? rest)
+        result
+        (iter (op result (car rest))
+              (cdr rest))))
+  (iter initial sequence))
+
+; (fold-right / 1 (list 1 2 3)) -> 3/2
+; (fold-left / 1 (list 1 2 3)) -> 1/2/3 = 1/6
+; (fold-right list nil (list 1 2 3)) -> (1 (2 (3 ())))
+; (fold-left list nil (list 1 2 3)) -> (((() 1) 2) 3)
+
+; for fold-right to be the same fn as fold-left,
+; op should be commutative like * and +
+
+; Ex 2.39
+; start taking from right
+(define (reverse-r sequence)
+  (fold-right (lambda (x acc)
+                (append acc (list x)))
+              nil
+              sequence))
+
+(define (reverse-l sequence)
+  (fold-left (lambda (x acc)
+               (cons acc x))
+             nil
+             sequence))
+
+; the combination of mapping and accumulating with append
+(define (flatmap proc seq)
+  (accumulate append nil (map proc seq)))
 
 ; helper procedures
 (define (square n) (* n n))
@@ -144,3 +216,7 @@
         a
         (iter (+ a b) a (- n 1))))
   (iter 0 1 n))
+(define (for-each proc sequence)
+  (if (null? sequence)
+      (newline)
+      (and (proc (car sequence)) (for-each proc (cdr sequence)))))

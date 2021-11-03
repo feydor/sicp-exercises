@@ -207,8 +207,33 @@
 (define (flatmap proc seq)
   (accumulate append nil (map proc seq)))
 
+(define (prime-sum? pair)
+  (prime? (+ (car pair) (cadr pair))))
+
+(define (make-pair-sum pair)
+  (list (car pair) (cadr pair) (+ (car pair) (cadr pair))))
+
+(define (prime-sum-pairs n)
+  (map make-pair-sum
+       (filter prime-sum?
+               (flatmap
+                (lambda (i)
+                  (map (lambda (j) (list i j))
+                       (enumerate-interval 1 (- i 1))))
+                (enumerate-interval 1 n)))))
+
+; Ex 2.45
+;(define (split lf rf)
+;  (lambda (painter n)
+;    (if (= n 0)
+;        painter
+;        (let ((smaller (split painter (- n 1))))
+;          (lf painter (rf smaller smaller))))))
+
+
 ; helper procedures
 (define (square n) (* n n))
+(define (divides? a b) (= 0 (modulo b a)))
 (define (leaf? tree) (not (pair? tree)))
 (define (fib n)
   (define (iter a b n)
@@ -220,3 +245,17 @@
   (if (null? sequence)
       (newline)
       (and (proc (car sequence)) (for-each proc (cdr sequence)))))
+
+; prime? - testing for divisiblity via successive integers starting with 2
+(define (prime? n)
+  (= n (smallest-divisor n)))
+(define (smallest-divisor n)
+  (find-divisor-improved n 2))
+(define (find-divisor-improved n test-divisor)
+  (define (next n)
+    (if (= n 2)
+        3
+        (+ n 2)))
+  (cond ((> (square test-divisor) n) n)
+        ((divides? test-divisor n) test-divisor)
+        (else (find-divisor-improved n (next test-divisor)))))

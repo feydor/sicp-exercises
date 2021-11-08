@@ -1,5 +1,10 @@
 #lang racket
 (define (atom? x) (and (not (pair? x)) (not (null? x))))
+(define (accumulate combiner initial sequence)
+  (if (null? sequence)
+      initial
+      (combiner (car sequence)
+                (accumulate combiner initial (cdr sequence)))))
 
 ; Symbolic Differentiation
 ; '(op expr1 expr2)
@@ -16,6 +21,12 @@
                         (deriv (m2 expr) var))
           (make-product (deriv (m1 expr) var)
                         (m2 expr)))]
+        [(exponentiation? expr var)
+         (make-product (make-product (exponent expr)
+                                     (make-exponentiation (base expr)
+                                                          (make-sum (exponent expr)
+                                                                    (- 1))))
+                       (deriv (base expr) var))]
         [else #f]
    ))
 
@@ -35,13 +46,20 @@
   (and (not (atom? expr))
        (eq? (car expr) '*)))
 
+(define (exponentiation? expr var)
+  (and (not (atom? expr))
+       (eq? (car expr) '**)))
+
+(define (make-exponentiation base exp)
+  (cond [(=number? exp 0) 1]
+        [(=number? exp 1) base]
+        [else (list '** base exp)]))
+
 (define (make-sum a1 a2)
   (cond [(and (number? a1) (number? a2))
          (+ a1 a2)]
-        [(and (number? a1) (= a1 0))
-         a2]
-        [(and (number? a2) (= a2 0))
-         a1]
+        [(=number? a1 0) a2]
+        [(=number? a2 0) a1]
         [else (list '+ a1 a2)]))
 
 (define (make-product m1 m2)
@@ -57,11 +75,18 @@
          0]
         [else (list '* m1 m2)]))
 
+(define (=number? x num)
+  (and (number? x) (= x num)))
+
 (define op car)
 (define a1 cadr)
-(define a2 caddr)
+(define (a2 s)
+  (accumulate make-sum 0 (cddr s)))
 (define m1 cadr)
-(define m2 caddr)
+(define (m2 p)
+  (accumulate make-product 1 (cddr p)))
+(define base cadr)
+(define exponent caddr)
 
 ; an example of usage
 ; f(x) = ax^2 + bx + c
@@ -82,3 +107,4 @@
             (* 0 x))
          0)))
 
+(define expn '(** x 15)) ; (deriv expn 'x) => 15x^14
